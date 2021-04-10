@@ -294,7 +294,7 @@ top_terms %>%
   scale_y_reordered()
 ```
 
-![](tests_topic_mod_v1_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](Figs/unnamed-chunk-5-1.png)<!-- -->
 
 The results with the top 10 terms by topic can be interpreted as
 follows:
