@@ -1,0 +1,192 @@
+---
+title: "Topic Modelling"
+author: "NLP4StatRef"
+date: "10/4/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval=FALSE)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(cache=FALSE)
+knitr::opts_chunk$set(comment='>')
+knitr::opts_chunk$set(tidy=FALSE)
+knitr::opts_chunk$set(fig.width=8)
+knitr::opts_chunk$set(fig.height=8)
+```
+
+## Topic modelling: tests with the Latent Semantic Analysis (LSA) algorithm.
+***
+
+### 1. Initialization of the R environment.
+***
+The first step is to load the required libraries. The code chunk below automatically installs these libraries if they are missing. Then we set the working folder to the one containing the R Markdown document and the input datasets. The commented-out code: 
+
+_current_working_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)_ 
+
+works only from within RStudio when running the document chunk-by-chunk. If this is not the case (e.g. when knitting the document), the user has to set the working directory manually.
+
+```{r, eval=TRUE, echo=TRUE, message=FALSE, warning=FALSE}
+
+rm(list=ls()) ## clear objects from memory
+
+## install libraries if missing
+list.of.packages <- c('tm','ggplot2','topicmodels','tidytext','dplyr')
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
+library(tm)
+library(ggplot2)
+library(topicmodels)
+library(tidytext)
+library(dplyr)
+
+#current_working_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
+#print(current_working_dir)
+#setwd(current_working_dir)
+
+## ADJUST THIS 
+setwd('D://Kimon//Documents//Quantos-new//NLP4StatRef//Deliverable D2.2')
+
+```
+
+### 2. Data input.
+***
+
+We read two of the files extracted from the database, with the glossary articles definitions in _ESTAT_dat_concepts_2021_04_08.csv_ and their titles in _ESTAT_dat_link_info_2021_04_08.csv_. The common key is _id_. **At a later stage, the reading of the files will be directly from the KD**. 
+
+We then drop articles with missing titles and/or definitions and also de-duplicate the records of the resulting file based on these two fields.
+
+
+```{r, eval=TRUE, echo=TRUE, message=TRUE, warning=TRUE}
+
+dat1 <- read.csv2('ESTAT_dat_concepts_2021_04_08.csv')
+dat2 <- read.csv2('ESTAT_dat_link_info_2021_04_08.csv')
+dat <- merge(dat1,dat2,by=c('id'),all=FALSE)
+dat <- dat[,c('title','definition')]
+
+dels <- which(is.na(dat$title))
+if(length(dels)>0) dat <- dat[-dels,]
+
+dels <- which(is.na(dat$definition))
+if(length(dels)>0) dat <- dat[-dels,]
+
+dels <-which(duplicated(dat$title))
+if(length(dels)>0) dat <- dat[-dels,]
+
+dels <- which(duplicated(dat$definition))
+if(length(dels)>0) dat <- dat[-dels,]
+
+rm(dat1,dat2)
+```
+
+### 3. Data cleaning.
+***
+
+In the next step we do some data cleaning: 
+
+* Replace multiple spaces with single ones in definitions.
+* Discard spaces at the start of definitions and titles. 
+* Replace space-comma-space by comma-space in definitions.
+
+```{r, eval=TRUE, echo=TRUE, message=TRUE, warning=TRUE}
+
+dat$definition <- gsub(' +',' ',dat$definition) ## discard multiple spaces
+dat$definition <- gsub('^ +','',dat$definition) ## discard spaces at start
+dat$definition <- gsub(' \\, ','\\, ',dat$definition) ## space-comma-space -> comma-space
+
+dat$title <- gsub('^ +','',dat$title) ## discard spaces at start
+
+```
+
+### 4. Creating tm objects.
+***
+
+Next we create a corpus _texts_ from the articles. This has initially 1285 text entries. We apply the standard pre-processing steps to the texts:
+
+* Remove punctuation and numbers. 
+* Convert all to lower case.
+* Strip whitespace and apply an English stemmer.
+
+In the end we obtain 331 terms. 
+
+We then create a document-to-term matrix _dmat_, keeping words with minimum length 5, each one in at least 2% of documents and in at most 30% of the documents. We remove documents without terms and convert the matrix to a 1278 x 331 dataframe for inspection. 
+
+Note that in the construction of the document-to-term matrix, we do not request any weights, such as tf-idf. This is a requirement of the LDA algorith.
+
+
+
+```{r,  eval=TRUE, echo=TRUE, message=TRUE, warning=FALSE}
+
+texts <- Corpus(VectorSource(dat$definition))
+ndocs <- nrow(dat)
+cat('ndocs = ',ndocs,'\n')
+
+## apply several pre-processing steps (see package tm)
+texts <- tm_map(texts, removePunctuation) 
+texts <- tm_map(texts, removeNumbers) 
+texts <- tm_map(texts, tolower)
+
+texts <- tm_map(texts, removeWords, stopwords(kind='SMART')) 
+texts <- tm_map(texts, stripWhitespace) 
+texts <- tm_map(texts, stemDocument, language='english')
+
+## create document-to-term matrix (tf-idf)
+## min word length: 5, each term in at least 2% of documents 
+## and at most in 40% of documents
+dtm <- DocumentTermMatrix(texts,
+                          control=list(weighting=weightTf, 
+                            wordLengths=c(5, Inf),bounds = 
+                              list(global = c(0.02*ndocs,
+                                              0.3*ndocs))))
+
+dels <- which(apply(dtm,1,sum)==0) #remove all texts without terms 
+if(length(dels)>0) {
+  dtm   <- dtm[-dels, ]           
+  dat <- dat[-dels,]
+}
+
+nTerms(dtm)
+Terms(dtm)
+
+## convert to dataframe for inspection
+dtm.dat <- as.data.frame(as.matrix(dtm))
+rownames(dtm.dat)<- dat$title
+
+print(inspect(dtm))
+```
+
+### 5. Application of the LDA algorithm.
+***
+
+We apply the LDA algorithm with k=6 topics.  
+
+```{r,  eval=TRUE, echo=TRUE, message=TRUE, warning=TRUE}
+
+lda_model <- LDA(dtm, k = 6, control = list(seed = 1234))
+topics <- tidy(lda_model, matrix = "beta")
+
+top_terms <- topics %>%
+  group_by(topic) %>%
+  slice_max(beta, n = 10) %>% 
+  ungroup() %>%
+  arrange(topic, -beta)
+
+top_terms %>%
+  mutate(term = reorder_within(term, beta, topic)) %>%
+  ggplot(aes(beta, term, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  scale_y_reordered()
+
+```
+
+The results with the top 10 terms by topic can be interpreted as follows: 
+
+* Topic 1 is about demography and regions.
+* Topic 2 is about EU countries and economies. 
+* Topic 3 is about persons and employment.
+* Topic 4 is about household incomes and social aspects. 
+* Topic 5 is about enterprises and business activities.
+* Topic 6 is about primary production, energy and resources. 
+
