@@ -277,7 +277,7 @@ print(inspect(dtm))
 We apply the LDA algorithm with k=6 topics.
 
 ``` r
-lda_model <- LDA(dtm, k = 6, control = list(seed = 1234))
+lda_model <- LDA(dtm, k = 20, control = list(seed = 1234))
 topics <- tidy(lda_model, matrix = "beta")
 
 top_terms <- topics %>%
