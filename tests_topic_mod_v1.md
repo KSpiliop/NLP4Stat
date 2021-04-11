@@ -3,7 +3,7 @@ Topic Modelling
 NLP4StatRef
 10/4/2021
 
-## Topic modelling: tests with the Latent Semantic Analysis (LSA) algorithm.
+## Topic modelling: tests with the Latent Dirichlet Allocation (LDA) algorithm.
 
 ------------------------------------------------------------------------
 
@@ -299,9 +299,23 @@ top_terms %>%
 The results with the top 10 terms by topic can be interpreted as
 follows:
 
--   Topic 1 is about demography and regions.
--   Topic 2 is about EU countries and economies.
--   Topic 3 is about persons and employment.
--   Topic 4 is about household incomes and social aspects.
--   Topic 5 is about enterprises and business activities.
--   Topic 6 is about primary production, energy and resources.
+-   Topic 1: Social expenditure and contributions.
+-   Topic 2: Population, regions and geography.
+-   Topic 3: Persons and employment.
+-   Topic 4: Intellectual property rights.
+-   Topic 5: Economic sectors.
+-   Topic 6: Public services.
+-   Topic 7: International trade.
+-   Topic 8: Price indices.
+-   Topic 9: Surveys.
+-   Topic 10: Technology, research and innovation.
+-   Topic 11: Countries, territories and resident population.
+-   Topic 12: Business activities and enterprises.
+-   Topic 13: Transport.
+-   Topic 14: Primary production and the environment.
+-   Topic 15: The EU and the member states.
+-   Topic 16: Energy and water resources.
+-   Topic 17: Accounting and finance.
+-   Topic 18: Healthcare.
+-   Topic 19: Households disposable income and consumption.
+-   Topic 20: Production, consumption and gross capital.
