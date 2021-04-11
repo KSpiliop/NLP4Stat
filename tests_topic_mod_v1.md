@@ -141,7 +141,7 @@ texts <- tm_map(texts, stemDocument, language='english')
 
 ## create document-to-term matrix (tf-idf)
 ## min word length: 5, each term in at least 2% of documents 
-## and at most in 40% of documents
+## and at most in 30% of documents
 dtm <- DocumentTermMatrix(texts,
                           control=list(weighting=weightTf, 
                             wordLengths=c(5, Inf),bounds = 
