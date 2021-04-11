@@ -274,7 +274,7 @@ print(inspect(dtm))
 
 ------------------------------------------------------------------------
 
-We apply the LDA algorithm with k=6 topics.
+We apply the LDA algorithm with k=20 topics.
 
 ``` r
 lda_model <- LDA(dtm, k = 20, control = list(seed = 1234))
