@@ -36,24 +36,23 @@ works only from within RStudio when running the document chunk-by-chunk. If this
 rm(list=ls()) ## clear objects from memory
 
 ## install libraries if missing
-##list.of.packages <- c('tm','ggplot2','topicmodels','tidytext','dplyr','virtuoso','RODBC')
-##new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-##if(length(new.packages)) install.packages(new.packages)
+list.of.packages <- c('tm','ggplot2','topicmodels','tidytext','dplyr')
+                      
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
 
 library(tm)
 library(ggplot2)
 library(topicmodels)
 library(tidytext)
 library(dplyr)
-library(virtuoso)
-library(RODBC)
 
 #current_working_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
 #print(current_working_dir)
 #setwd(current_working_dir)
 
 ## ADJUST THIS 
-setwd('D://Kimon//Documents//Quantos-new//NLP4StatRef//Deliverable D2.2')
+## setwd('D://Kimon//Documents//Quantos-new//NLP4StatRef//Deliverable D2.2')
 
 ```
 
@@ -76,8 +75,8 @@ We then drop articles with missing titles and/or definitions and also de-duplica
 # 
 # c = pyodbc.connect('DSN=VirtuosoKapcode;DBA=ESTAT;UID=XXXX;PWD=XXXXXXXXXXXX')\n",
 
-dat1 <- read.csv2('ESTAT_dat_concepts_2021_04_08.csv')
-dat2 <- read.csv2('ESTAT_dat_link_info_2021_04_08.csv')
+dat1 <- read.csv2('~//Data//ESTAT_dat_concepts_2021_04_08.csv')
+dat2 <- read.csv2('~//Data//ESTAT_dat_link_info_2021_04_08.csv')
 dat <- merge(dat1,dat2,by=c('id'),all=FALSE)
 dat <- dat[,c('title','definition')]
 
