@@ -1,11 +1,11 @@
 ---
 title: "Topic Modelling"
 author: "NLP4StatRef"
-date: "10/4/2021"
+date: "11/4/2021"
 output:
-  word_document: default
-  html_document: default
   github_document: default
+  html_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -36,7 +36,7 @@ works only from within RStudio when running the document chunk-by-chunk. If this
 rm(list=ls()) ## clear objects from memory
 
 ## install libraries if missing
-list.of.packages <- c('tm','ggplot2','topicmodels','tidytext','dplyr')
+list.of.packages <- c('tm','ggplot2','topicmodels','tidytext','dplyr','virtuoso','RODBC')
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
@@ -45,6 +45,8 @@ library(ggplot2)
 library(topicmodels)
 library(tidytext)
 library(dplyr)
+library(virtuoso)
+library(RODBC)
 
 #current_working_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
 #print(current_working_dir)
@@ -64,6 +66,15 @@ We then drop articles with missing titles and/or definitions and also de-duplica
 
 
 ```{r, eval=TRUE, echo=TRUE, message=TRUE, warning=TRUE}
+
+# db_connect <- odbcConnect(dsn='https://virtuoso.kappasante.com/',uid='kimon',pwd='jjIJMFIZTWhxeEmX8u7K')
+#                           
+#                           
+# 
+# {SQL Server};
+#     server=s001111;database=XX;trusted_connection=true')
+# 
+# c = pyodbc.connect('DSN=VirtuosoKapcode;DBA=ESTAT;UID=XXXX;PWD=XXXXXXXXXXXX')\n",
 
 dat1 <- read.csv2('ESTAT_dat_concepts_2021_04_08.csv')
 dat2 <- read.csv2('ESTAT_dat_link_info_2021_04_08.csv')
@@ -117,7 +128,7 @@ In the end we obtain 331 terms.
 
 We then create a document-to-term matrix _dmat_, keeping words with minimum length 5, each one in at least 2% of documents and in at most 30% of the documents. We remove documents without terms and convert the matrix to a 1278 x 331 dataframe for inspection. 
 
-Note that in the construction of the document-to-term matrix, we do not request any weights, such as tf-idf. This is a requirement of the LDA algorith.
+Note that in the construction of the document-to-term matrix, we do not request any weights, such as tf-idf. This is a requirement of the LDA algorithm.
 
 
 
@@ -138,7 +149,7 @@ texts <- tm_map(texts, stemDocument, language='english')
 
 ## create document-to-term matrix (tf-idf)
 ## min word length: 5, each term in at least 2% of documents 
-## and at most in 40% of documents
+## and at most in 30% of documents
 dtm <- DocumentTermMatrix(texts,
                           control=list(weighting=weightTf, 
                             wordLengths=c(5, Inf),bounds = 
@@ -164,7 +175,9 @@ print(inspect(dtm))
 ### 5. Application of the LDA algorithm.
 ***
 
-We apply the LDA algorithm with k=20 topics.  
+We apply the LDA algorithm with k=20 topics. Function _LDA()_ returns an object which contains, among others, a matrix _beta_ expressing, for each topic and term, the **probability that the term is generated from the specific topic**. For details, see [r package topicmodels](https://cran.r-project.org/web/packages/topicmodels/topicmodels.pdf). 
+
+In the following code, we first group the results by topic and then select the terms with the top _beta_ values in each topic.Then we plot these values and the corresponding terms for each topic.
 
 ```{r,  eval=TRUE, echo=TRUE, message=TRUE, warning=TRUE, fig.keep='all'}
 
@@ -209,4 +222,5 @@ The results with the top 10 terms by topic can be interpreted as follows:
 * Topic 19: Households disposable income and consumption.
 * Topic 20: Production, consumption and gross capital.
 
+If these results are useful, the analysis will be extended to take into account the _gamma_ coefficients which express, for each document and topic, the **estimated proportion of terms from the document that are generated from that topic**.
 
