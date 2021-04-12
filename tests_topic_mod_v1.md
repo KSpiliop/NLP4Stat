@@ -1,7 +1,7 @@
 Topic Modelling
 ================
 NLP4StatRef
-10/4/2021
+11/4/2021
 
 ## Topic modelling: tests with the Latent Dirichlet Allocation (LDA) algorithm.
 
@@ -28,6 +28,7 @@ rm(list=ls()) ## clear objects from memory
 
 ## install libraries if missing
 list.of.packages <- c('tm','ggplot2','topicmodels','tidytext','dplyr')
+                      
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
@@ -42,7 +43,7 @@ library(dplyr)
 #setwd(current_working_dir)
 
 ## ADJUST THIS 
-setwd('D://Kimon//Documents//Quantos-new//NLP4StatRef//Deliverable D2.2')
+## setwd('D://Kimon//Documents//Quantos-new//NLP4StatRef//Deliverable D2.2')
 ```
 
 ### 2. Data input.
@@ -60,8 +61,8 @@ de-duplicate the records of the resulting file based on these two
 fields.
 
 ``` r
-dat1 <- read.csv2('ESTAT_dat_concepts_2021_04_08.csv')
-dat2 <- read.csv2('ESTAT_dat_link_info_2021_04_08.csv')
+dat1 <- read.csv2('.//Data//ESTAT_dat_concepts_2021_04_08.csv')
+dat2 <- read.csv2('.//Data//ESTAT_dat_link_info_2021_04_08.csv')
 dat <- merge(dat1,dat2,by=c('id'),all=FALSE)
 dat <- dat[,c('title','definition')]
 
@@ -119,7 +120,7 @@ matrix to a 1278 x 331 dataframe for inspection.
 
 Note that in the construction of the document-to-term matrix, we do not
 request any weights, such as tf-idf. This is a requirement of the LDA
-algorith.
+algorithm.
 
 ``` r
 texts <- Corpus(VectorSource(dat$definition))
@@ -274,7 +275,15 @@ print(inspect(dtm))
 
 ------------------------------------------------------------------------
 
-We apply the LDA algorithm with k=20 topics.
+We apply the LDA algorithm with k=20 topics. Function *LDA()* returns an
+object which contains, among others, a matrix *beta* expressing, for
+each topic and term, the **probability that the term is generated from
+the specific topic**. For details, see [r package
+topicmodels](https://cran.r-project.org/web/packages/topicmodels/topicmodels.pdf).
+
+In the following code, we first group the results by topic and then
+select the terms with the top *beta* values in each topic.Then we plot
+these values and the corresponding terms for each topic.
 
 ``` r
 lda_model <- LDA(dtm, k = 20, control = list(seed = 1234))
@@ -319,3 +328,8 @@ follows:
 -   Topic 18: Healthcare.
 -   Topic 19: Households disposable income and consumption.
 -   Topic 20: Production, consumption and gross capital.
+
+If these results are useful, the analysis will be extended to take into
+account the *gamma* coefficients which express, for each document and
+topic, the **estimated proportion of terms from the document that are
+generated from that topic**.
