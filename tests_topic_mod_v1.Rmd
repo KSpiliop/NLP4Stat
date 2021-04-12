@@ -36,9 +36,9 @@ works only from within RStudio when running the document chunk-by-chunk. If this
 rm(list=ls()) ## clear objects from memory
 
 ## install libraries if missing
-list.of.packages <- c('tm','ggplot2','topicmodels','tidytext','dplyr','virtuoso','RODBC')
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages)
+##list.of.packages <- c('tm','ggplot2','topicmodels','tidytext','dplyr','virtuoso','RODBC')
+##new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+##if(length(new.packages)) install.packages(new.packages)
 
 library(tm)
 library(ggplot2)
